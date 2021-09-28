@@ -61,3 +61,8 @@
                       (assoc :db/id id)))))
          entity->flat)
         (group-by (comp namespace first) entity)))
+
+(defn resultset-into-datoms
+  "Konwertuje wynik działania selecta na datomy"
+  [resultset]
+  (into (sorted-set) (mapcat entity->datoms) resultset))

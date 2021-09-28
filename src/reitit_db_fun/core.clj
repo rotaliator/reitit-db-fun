@@ -234,6 +234,6 @@
                                              :from      :article
                                              #_#_:limit 10})]
                  (->> (jdbc/execute! datasource query)
-                      (into #{} (mapcat datom/entity->datoms))))))
+                      datom/resultset-into-datoms))))
 
   )
