@@ -16,7 +16,7 @@
             [xtdb.api :as xt]
 
             ;; Datalevin
-            [datalevin.core :as d]
+            ;;[datalevin.core :as d]
 
             ;; JDBC
             [next.jdbc :as jdbc]
@@ -25,7 +25,14 @@
             [honey.sql.helpers :as h]
 
             ;; Datoms
-            [reitit-db-fun.datom :as datom]))
+            [reitit-db-fun.datom :as datom]
+
+            ;; UUID
+            [reitit-db-fun.uuid :as uuid]
+
+            ;; Datascript
+            [datascript.core :as d]
+            [datascript.db :as db]))
 
 ;; ==== Config ====
 
@@ -162,9 +169,9 @@
     (doseq [idx (range 1000)]
       (app {:request-method :post
             :uri            "/api/article"
-            :body-params    {:article/title  (str "Test-" (inc idx))
-                             :article/author "pkoza"
-                             #_#_:article/id idx}})))
+            :body-params    {:article/title   (str "Test-" (inc idx))
+                             :article/author  "pkoza"
+                             :article/address (rand-nth addresses)}})))
 
   (let [node (:storage/xtdb @main-system)
         id   1]
@@ -177,39 +184,7 @@
   (-> (:model/article-datalevin @main-system)
       (reitit-db-fun.model/get-articles {}))
 
-
-  ;; Datalevin test
-
-  (let [conn (:storage/datalevin @main-system)]
-    (d/transact! conn
-                 [{:article/title "A Frege", :db/id -1, :article/nation "France", :article/aka ["foo" "fred"]}
-                  {:article/title "A Peirce", :db/id -2, :article/nation "france"}
-                  {:article/title "De Morgan", :db/id -3, :article/nation "English"}]))
-
-  (let [conn (:storage/datalevin @main-system)]
-    (d/q '[:find ?nation
-           :in $ ?alias
-           :where
-           [?e :article/aka ?alias]
-           [?e :article/nation ?nation]]
-         (d/db conn)
-         "foo"))
-
-  (let [conn (:storage/datalevin @main-system)]
-    (d/q '[:find (pull ?e [*])
-           :where
-           [?e :article/title]]
-         (d/db conn)))
-  (let [conn (:storage/datalevin @main-system)]
-    (d/q '[:find (pull ?article-id [*])
-           :in $ ?article-id
-           :where
-           [?e :db/id ?article-id]]
-         (d/db conn)
-         18))
-  ;; jdbc
-
-
+  ;; JDBC
   (->
    (let [datasource                        (:storage/sql @main-system)
          {:article/keys [id title author]} {:article/id     "9898906f-ce7f-42ad-a66d-7173b2c2bd03"
@@ -230,10 +205,46 @@
                                    ((keyword "last_insert_rowid()")) result]))))
 
   (time (count (let [datasource (:storage/sql @main-system)
-                     query      (sql/format {:select    :*
-                                             :from      :article
-                                             #_#_:limit 10})]
+                     query      (sql/format {:select [:article/* :address/*]
+                                             :from   [:article :address]
+                                             :where  [:= :address/id :article/address]
+                                             :limit  10})]
                  (->> (jdbc/execute! datasource query)
                       datom/resultset-into-datoms))))
+
+
+  (let [datasource (:storage/sql @main-system)
+        query      (sql/format {:insert-into [:address]
+                                :columns     [:id :street :city]
+                                :values      [[(str (uuid/time-ordered-with-random)) "Wróbla" "Puławy"]
+                                              [(str (uuid/time-ordered-with-random)) "Kołłątaja" "Puławy"]
+                                              [(str (uuid/time-ordered-with-random)) "Jaworowa" "Puławy"]
+                                              [(str (uuid/time-ordered-with-random)) "Prusa" "Puławy"]]}
+                               {:pretty true})]
+    (->> (jdbc/execute! datasource query)))
+  (let [datasource (:storage/sql @main-system)]
+    (->> (jdbc/execute! datasource (sql/format {:select :* :from :address}))
+         datom/resultset-into-datoms))
+
+  (def addresses (let [datasource (:storage/sql @main-system)]
+                   (->> {:select :* :from :address}
+                        sql/format
+                        (jdbc/execute! datasource)
+                        (mapv :address/id))))
+
+  (def initial-data (let [datasource (:storage/sql @main-system)
+                          query      (sql/format {:select [:article/* :address/*]
+                                                  :from   [:article :address]
+                                                  :where  [:= :address/id :article/address]
+                                                  :limit  10})]
+                      (->> (jdbc/execute! datasource query)
+                           datom/resultset-into-datoms)))
+
+  (def test-db
+    (let [db (-> (d/empty-db)
+                 (d/db-with initial-data))]
+      db))
+
+  (def db2 (read-string s))
 
   )

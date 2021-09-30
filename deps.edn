@@ -1,4 +1,4 @@
-{:paths ["src" "resources"]
+{:paths ["src/clj" "src/cljs" "resources" "target"]
  :deps  {org.clojure/tools.logging {:mvn/version "1.1.0"}
          org.slf4j/slf4j-log4j12   {:mvn/version "1.7.32"}
          integrant/integrant       {:mvn/version "0.8.0"}
@@ -22,9 +22,8 @@
          org.xerial/sqlite-jdbc            {:mvn/version "3.36.0.3"}
          ragtime/ragtime                   {:mvn/version "0.8.1"}
 
+         ;; Datascript
+         datascript/datascript          {:mvn/version "1.2.8"}
+
          ;; for time-ordered UUIDs
-         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.1"}
-
-         ;;Log
-
-         }}
+         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.1"}}}

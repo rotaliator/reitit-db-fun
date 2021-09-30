@@ -1,6 +1,8 @@
 {:up   ["CREATE TABLE article (
          id     VARCHAR(36) PRIMARY KEY,
          title  VARCHAR(100),
-         author VARCHAR(100)
-       );"]
+         author VARCHAR(100),
+         address VARCHAR(36),
+         FOREIGN KEY(address) REFERENCES address(id)
+        );"]
  :down ["DROP TABLE article;"]}

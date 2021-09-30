@@ -60,16 +60,17 @@
 (defrecord ArticleSQL [datasource]
   reitit-db-fun.model/IArticle
   (update-article [_ article] ;; jeśli jest id to robię update, jeśli nie ma to insert
-    (let [{:article/keys [id title author]} article
+    (let [{:article/keys [id title author address]} article
 
           result (if id
                    (jdbc-sql/update! datasource :article
                                      {:title title :author author}
                                      {:id id})
                    (jdbc-sql/insert! datasource :article
-                                     {:id     (str (uuid/time-ordered-with-random))
-                                      :title  title
-                                      :author author}))]
+                                     {:id      (str (uuid/time-ordered-with-random))
+                                      :title   title
+                                      :author  author
+                                      :address address}))]
       (if id
         (jdbc-sql/query datasource ["select * from article where id = ?" id])
         (jdbc-sql/query datasource ["select * from article where rowid = ?"
