@@ -3,5 +3,5 @@
          street text,
          city   text
        );"
-        "insert into sqlite_sequence (seq, name) values (1000000, 'address');"]
+        "insert into sqlite_sequence (seq, name) values (2000000, 'address');"]
  :down ["DROP TABLE address;"]}

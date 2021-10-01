@@ -1,0 +1,8 @@
+{:up   ["CREATE TABLE user (
+         id      INTEGER PRIMARY KEY AUTOINCREMENT,
+         name    TEXT,
+         address INTEGER,
+         FOREIGN KEY(address) REFERENCES address(id)
+        );"
+        "insert into sqlite_sequence (seq, name) values (1000000, 'user');"]
+ :down ["DROP TABLE user;"]}

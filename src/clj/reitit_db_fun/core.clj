@@ -137,64 +137,9 @@
 
 
 (comment
-  (restart-system)
 
-
-  (-> ((:app/handler @main-system)
-       {:request-method :post
-        :uri            "/api/article"
-        :body-params    {#_#_:xt/id      1
-                         :article/id     "3ba51497-4a08-4e48-9b2c-ec4c88930da7"
-                         :article/title  "Title zmieniony ponownie"
-                         :article/author "pkoza"
-                         :article/gerne  "blog"}})
-      :body
-      slurp
-      )
-
-  (-> ((:app/handler @main-system)
-       {:request-method :get
-        :uri            "/api/article/1"})
-      :body
-      slurp)
-
-  (-> ((:app/handler @main-system)
-       {:request-method :get
-        :uri            "/api/articles"})
-      :body
-      slurp)
-
-
-  (let [app (:app/handler @main-system)]
-    (doseq [idx (range 1000)]
-      (app {:request-method :post
-            :uri            "/api/article"
-            :body-params    {:article/title   (str "Test-" (inc idx))
-                             :article/author  "pkoza"
-                             :article/address (rand-nth addresses)}})))
-
-  (let [node (:storage/xtdb @main-system)
-        id   1]
-    (xt/q (xt/db node)
-          '{:find  [(pull ?e [*])]
-            :in    [id]
-            :where [[?e :xt/id id]]}
-          id))
-
-  (-> (:model/article-datalevin @main-system)
-      (reitit-db-fun.model/get-articles {}))
-
-  ;; JDBC
-
-  (time (count (let [datasource (:storage/sql @main-system)
-                     query      (sql/format {:select [:article/* :address/*]
-                                             :from   [:article :address]
-                                             :where  [:= :address/id :article/address]
-                                             :limit  10})]
-                 (->> (jdbc/execute! datasource query)
-                      datom/resultset-into-datoms))))
-
-
+  ;; przygotowuję dane.
+  ;; Przykładowe adresy
   (let [datasource (:storage/sql @main-system)
         query      (sql/format {:insert-into [:address]
                                 :columns     [:street :city]
@@ -204,33 +149,81 @@
                                               ["Prusa" "Puławy"]]}
                                {:pretty true})]
     (->> (jdbc/execute! datasource query)))
+  ;; przykładowi userzy
 
-  (let [datasource (:storage/sql @main-system)]
-    (->> (jdbc/execute! datasource (sql/format {:select :* :from :address}))
-         datom/resultset-into-datoms))
-
-  (def addresses (let [datasource (:storage/sql @main-system)]
-                   (->> {:select :* :from :address}
+  (let [datasource (:storage/sql @main-system)
+        addresses  (->> {:select :* :from :address}
                         sql/format
                         (jdbc/execute! datasource)
-                        (mapv :address/id))))
+                        (mapv :address/id))
+        query      (sql/format {:insert-into [:user]
+                                :columns     [:name :address]
+                                :values      [["Wacław" (rand-nth addresses)]
+                                              ["Fred" (rand-nth addresses)]
+                                              ["Ewa" (rand-nth addresses)]
+                                              ["Adam" (rand-nth addresses)]
+                                              ["Szczepan" (rand-nth addresses)]]}
+                               {:pretty true})]
+    (->> (jdbc/execute! datasource query)))
 
-  (def initial-data (let [datasource (:storage/sql @main-system)
-                          query      (sql/format {:select [:article/* :address/*]
-                                                  :from   [:article :address]
-                                                  :where  [:= :address/id :article/address]
-                                                  :limit  10})]
-                      (->> (jdbc/execute! datasource query)
-                           datom/resultset-into-datoms)))
+  ;; tworzę artykuły, tym razem  poprzez api
+  (let [datasource (:storage/sql @main-system)
+        authors    (->> {:select :* :from :user}
+                        sql/format
+                        (jdbc/execute! datasource)
+                        (mapv :user/id))
+        app        (:app/handler @main-system)]
+    (doseq [idx (range 100)]
+      (app {:request-method :post
+            :uri            "/api/article"
+            :body-params    {:article/title  (str "Test-" (inc idx))
+                             :article/body   (str "Treść artykułu " (inc idx))
+                             :article/author (rand-nth authors)}})))
+  ;; sprawdzam pojedynczy artykuł
+  (-> ((:app/handler @main-system)
+       {:request-method :get
+        :uri            "/api/article/3000001"})
+      (update :body slurp))
 
-  (def test-db (db/init-db (mapv #(apply d/datom %) initial-data)))
+  ;; aktualizacja danych
+  (-> ((:app/handler @main-system)
+       {:request-method :post
+        :uri            "/api/article"
+        :body-params    {:article/id     "3000001"
+                         :article/title  "Title zmieniony ponownie"
+                         :article/body   "Treść po zmiania"
+                         :article/author "pkoza"}})
+      (update :body slurp))
 
-  (d/q '[:find (pull ?e [* {:article/address [:address/city]}])
-         :where [?adr :address/street "Kołłątaja"]
-         [?e :article/address ?adr]]
+  ;; wszystkie arty
+  (-> ((:app/handler @main-system)
+       {:request-method :get
+        :uri            "/api/articles"})
+      :body
+      slurp)
+
+  ;; Basa SQL na Datomy!
+
+  (def initial-datoms
+    (let [datasource (:storage/sql @main-system)
+          query      (sql/format {:select [:article/* :address/* :user/*]
+                                  :from   [:article :address :user]
+                                  :where  [:and
+                                           [:= :article/author :user/id]
+                                           [:= :user/address :address/id]]
+                                  :limit  20})]
+      (->> (jdbc/execute! datasource query)
+           datom/resultset-into-datoms)))
+  ;; Datascript test db
+  (def test-db (db/init-db (mapv #(apply d/datom %) initial-datoms)))
+
+  (d/q '[:find (pull ?e [* {:article/author [:user/name {:user/address [*]}]}])
+         :where [?e :article/id _]]
        test-db)
 
-  (restart-system)
 
+  (do
+    (stop-system main-system)
+    (start-system main-system config))
 
   )

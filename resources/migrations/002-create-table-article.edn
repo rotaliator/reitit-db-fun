@@ -1,9 +1,0 @@
-{:up   ["CREATE TABLE article (
-         id     INTEGER PRIMARY KEY AUTOINCREMENT,
-         title  text,
-         author text,
-         address INTEGER,
-         FOREIGN KEY(address) REFERENCES address(id)
-        );"
-        "insert into sqlite_sequence (seq, name) values (2000000, 'article');"]
- :down ["DROP TABLE article;"]}
