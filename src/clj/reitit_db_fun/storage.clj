@@ -6,7 +6,7 @@
             ;;Datalevin
             [datalevin.core :as d]
             ;; SQL
-            [hikari-cp.core :as hicari-cp]
+            [hikari-cp.core :as hikari-cp]
             [ragtime.jdbc]
             [ragtime.repl]))
 
@@ -39,10 +39,10 @@
   (d/close conn))
 
 (defmethod ig/init-key :storage/sql [_ {:keys [conn-options migrations-dir]}]
-  (let [datasource (hicari-cp/make-datasource conn-options)]
+  (let [datasource (hikari-cp/make-datasource conn-options)]
     (ragtime.repl/migrate {:datastore  (ragtime.jdbc/sql-database {:connection-uri (:jdbc-url conn-options)})
                            :migrations (ragtime.jdbc/load-resources migrations-dir)})
     datasource))
 
 (defmethod ig/halt-key! :storage/sql [_ datasource]
-  (hicari-cp/close-datasource datasource))
+  (hikari-cp/close-datasource datasource))

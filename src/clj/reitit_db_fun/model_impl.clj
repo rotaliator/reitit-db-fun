@@ -67,8 +67,7 @@
                                      {:title title :author author}
                                      {:id id})
                    (jdbc-sql/insert! datasource :article
-                                     {:id      (str (uuid/time-ordered-with-random))
-                                      :title   title
+                                     {:title   title
                                       :author  author
                                       :address address}))]
       (if id

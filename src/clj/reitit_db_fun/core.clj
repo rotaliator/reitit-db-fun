@@ -185,24 +185,6 @@
       (reitit-db-fun.model/get-articles {}))
 
   ;; JDBC
-  (->
-   (let [datasource                        (:storage/sql @main-system)
-         {:article/keys [id title author]} {:article/id     "9898906f-ce7f-42ad-a66d-7173b2c2bd03"
-                                            :article/title  "Tytuł zmieniony"
-                                            :article/author "tester!"}
-
-         result (if id
-                  (jdbc-sql/update! datasource :articles
-                                    {:title title :author author}
-                                    {:id id})
-                  (jdbc-sql/insert! datasource :articles
-                                    {:id     (str (java.util.UUID/randomUUID))
-                                     :title  title
-                                     :author author}))]
-     (if id
-       (jdbc-sql/query datasource ["select * from articles where id = ?" id])
-       (jdbc-sql/query datasource ["select * from articles where rowid = ?"
-                                   ((keyword "last_insert_rowid()")) result]))))
 
   (time (count (let [datasource (:storage/sql @main-system)
                      query      (sql/format {:select [:article/* :address/*]
@@ -215,13 +197,14 @@
 
   (let [datasource (:storage/sql @main-system)
         query      (sql/format {:insert-into [:address]
-                                :columns     [:id :street :city]
-                                :values      [[(str (uuid/time-ordered-with-random)) "Wróbla" "Puławy"]
-                                              [(str (uuid/time-ordered-with-random)) "Kołłątaja" "Puławy"]
-                                              [(str (uuid/time-ordered-with-random)) "Jaworowa" "Puławy"]
-                                              [(str (uuid/time-ordered-with-random)) "Prusa" "Puławy"]]}
+                                :columns     [:street :city]
+                                :values      [["Wróbla" "Puławy"]
+                                              ["Kołłątaja" "Puławy"]
+                                              ["Jaworowa" "Puławy"]
+                                              ["Prusa" "Puławy"]]}
                                {:pretty true})]
     (->> (jdbc/execute! datasource query)))
+
   (let [datasource (:storage/sql @main-system)]
     (->> (jdbc/execute! datasource (sql/format {:select :* :from :address}))
          datom/resultset-into-datoms))
@@ -240,11 +223,14 @@
                       (->> (jdbc/execute! datasource query)
                            datom/resultset-into-datoms)))
 
-  (def test-db
-    (let [db (-> (d/empty-db)
-                 (d/db-with initial-data))]
-      db))
+  (def test-db (db/init-db (mapv #(apply d/datom %) initial-data)))
 
-  (def db2 (read-string s))
+  (d/q '[:find (pull ?e [* {:article/address [:address/city]}])
+         :where [?adr :address/street "Kołłątaja"]
+         [?e :article/address ?adr]]
+       test-db)
+
+  (restart-system)
+
 
   )

@@ -1,0 +1,7 @@
+{:up   ["CREATE TABLE address (
+         id     INTEGER PRIMARY KEY AUTOINCREMENT,
+         street text,
+         city   text
+       );"
+        "insert into sqlite_sequence (seq, name) values (1000000, 'address');"]
+ :down ["DROP TABLE address;"]}

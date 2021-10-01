@@ -26,7 +26,7 @@
       (fn [result attr val]
         (if (= attr :db/id)
           result
-          (rf result [(:db/id entity) attr val])))
+          (rf result [#_:db/add (:db/id entity) attr val])))
       result entity))))
 
 
@@ -59,10 +59,11 @@
                   (-> {}
                       (into entity-for-table)
                       (assoc :db/id id)))))
-         entity->flat)
+         entity->flat
+         #_(map #(transit/tagged-value "datascript/Datom" %)))
         (group-by (comp namespace first) entity)))
 
 (defn resultset-into-datoms
   "Konwertuje wynik działania selecta na datomy"
   [resultset]
-  (into (sorted-set) (mapcat entity->datoms) resultset))
+  (into [] #_(sorted-set) (mapcat entity->datoms) resultset))

@@ -1,6 +1,0 @@
-{:up   ["CREATE TABLE address (
-         id     VARCHAR(36) PRIMARY KEY,
-         street VARCHAR(100),
-         city   VARCHAR(100)
-       );"]
- :down ["DROP TABLE address;"]}
