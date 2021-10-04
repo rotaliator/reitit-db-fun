@@ -1,0 +1,26 @@
+{
+  "name": "reitit-db-fun",
+  "version": "0.0.1",
+  "description": "Reitit+React full stack",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rotaliator/reitit-db-fun.git"
+  },
+  "author": "rotaliator",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rotaliator/reitit-db-fun/issues"
+  },
+  "homepage": "https://github.com/rotaliator/reitit-db-fun#readme",
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}

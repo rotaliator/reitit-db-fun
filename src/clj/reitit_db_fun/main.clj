@@ -1,4 +1,4 @@
-(ns reitit-db-fun.core
+(ns reitit-db-fun.main
   (:require [clojure.java.io :as io]
             [integrant.core :as ig]
             [aleph.http :as http]
