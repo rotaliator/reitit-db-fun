@@ -1,4 +1,5 @@
 (ns reitit-db-fun.main
+  (:gen-class)
   (:require [clojure.java.io :as io]
             [integrant.core :as ig]
             [aleph.http :as http]
@@ -130,7 +131,7 @@
     (when system
       (reset! system-atom (ig/halt! system)))))
 
-(defn -main [_]
+(defn -main [& args]
   (start-system main-system config))
 
 
@@ -229,5 +230,6 @@
     (stop-system main-system)
     (start-system main-system config))
 
+  (-main)
 
   )

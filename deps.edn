@@ -26,4 +26,13 @@
          datascript/datascript {:mvn/version "1.2.8"}
 
          ;; for time-ordered UUIDs
-         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.1"}}}
+         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.1"}}
+
+ :aliases
+ {:uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
+            :exec-fn      hf.depstar/uberjar
+            :exec-args    {:jar        "reitit-db-run.jar"
+                           :aot        true
+                           :main-class reitit-db-fun.main
+                           :exclude    ["config.edn"]}}
+  :server  {:main-opts ["-m" "reitit-db-fun.main"]}}}
