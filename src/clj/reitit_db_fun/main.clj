@@ -99,7 +99,10 @@
     {:data {:muuntaja   m/instance
             :middleware [muuntaja/format-middleware
                          muuntaja/format-response-middleware
-                         (wrap-keys keys-to-wrap)]}})))
+                         (wrap-keys keys-to-wrap)]}})
+   (ring/routes
+    (ring/create-resource-handler {:path "/"})
+    (ring/create-default-handler))))
 
 (defonce main-system (atom nil))
 
@@ -225,5 +228,6 @@
   (do
     (stop-system main-system)
     (start-system main-system config))
+
 
   )

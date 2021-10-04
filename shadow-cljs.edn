@@ -3,7 +3,7 @@
  :nrepl
  {:port 3333}
  :dev-http
- {8080 "public"}
+ {8081 "public"}
 
  :builds
  {:app
