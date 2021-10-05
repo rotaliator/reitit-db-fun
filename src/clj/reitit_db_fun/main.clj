@@ -14,7 +14,7 @@
             [reitit-db-fun.model-impl]
             [reitit-db-fun.storage]
             ;; XTDB
-            [xtdb.api :as xt]
+            #_[xtdb.api :as xt]
 
             ;; Datalevin
             ;;[datalevin.core :as d]
@@ -43,15 +43,15 @@
                                               :model/article-sql
                                               #_:model/article-xtdb)}}
 
-             :model/article-xtdb      {:node (ig/ref :storage/xtdb)}
-             :model/article-datalevin {:conn (ig/ref :storage/datalevin)}
+             #_#_ :model/article-xtdb      {:node (ig/ref :storage/xtdb)}
+             #_#_ :model/article-datalevin {:conn (ig/ref :storage/datalevin)}
              :model/article-sql       {:datasource (ig/ref :storage/sql)}
 
              :adapter/aleph {:port    8080
                              :handler (ig/ref :app/handler)}
 
-             :storage/xtdb      {}
-             :storage/datalevin {:uri    "datalevin.db"
+             #_#_ :storage/xtdb      {}
+             #_#_ :storage/datalevin {:uri    "datalevin.db"
                                  :schema {}}
              :storage/sql       {:conn-options   {:jdbc-url "jdbc:sqlite:database.sqlite"}
                                  :migrations-dir "migrations"}})

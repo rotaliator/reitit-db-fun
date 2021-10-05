@@ -8,12 +8,12 @@
          ring/ring-defaults        {:mvn/version "0.3.3"}
 
          ;; XTDB
-         com.xtdb/xtdb-core    {:mvn/version "1.19.0-beta1"}
-         com.xtdb/xtdb-rocksdb {:mvn/version "1.19.0-beta1"}
+         #_#_ com.xtdb/xtdb-core    {:mvn/version "1.19.0-beta1"}
+         #_#_ com.xtdb/xtdb-rocksdb {:mvn/version "1.19.0-beta1"}
 
          ;; Datalevin
-         datalevin/datalevin       {:mvn/version "0.5.12"}
-         com.cognitect/transit-clj {:mvn/version "1.0.324"}
+         #_#_ datalevin/datalevin       {:mvn/version "0.5.12"}
+         #_#_ com.cognitect/transit-clj {:mvn/version "1.0.324"}
 
          ;; SQL ;)
          com.github.seancorfield/next.jdbc {:mvn/version "1.2.709"}

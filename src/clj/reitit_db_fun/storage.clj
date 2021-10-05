@@ -2,9 +2,9 @@
   (:require [integrant.core :as ig]
             [clojure.java.io :as io]
             ;;XTDB
-            [xtdb.api :as xt]
+            #_[xtdb.api :as xt]
             ;;Datalevin
-            [datalevin.core :as d]
+            #_[datalevin.core :as d]
             ;; SQL
             [hikari-cp.core :as hikari-cp]
             [ragtime.jdbc]
@@ -12,7 +12,7 @@
 
 
 ;; ===== XTDB ========
-(defn start-xtdb! []
+#_(defn start-xtdb! []
   (letfn [(kv-store [dir]
             {:kv-store {:xtdb/module 'xtdb.rocksdb/->kv-store
                         :db-dir      (io/file dir)
@@ -23,19 +23,19 @@
       :xtdb/index-store    (kv-store "data/dev/index-store")})))
 
 
-(defmethod ig/init-key :storage/xtdb [_ opts]
+#_(defmethod ig/init-key :storage/xtdb [_ opts]
   #_(xt/start-node opts)
   (start-xtdb!))
 
-(defmethod ig/halt-key! :storage/xtdb [_ node]
+#_(defmethod ig/halt-key! :storage/xtdb [_ node]
   (.close node))
 
 ;; Datalevin
 
-(defmethod ig/init-key :storage/datalevin [_ {:keys [uri schema]}]
+#_(defmethod ig/init-key :storage/datalevin [_ {:keys [uri schema]}]
   (d/get-conn uri schema))
 
-(defmethod ig/halt-key! :storage/datalevin [_ conn]
+#_(defmethod ig/halt-key! :storage/datalevin [_ conn]
   (d/close conn))
 
 (defmethod ig/init-key :storage/sql [_ {:keys [conn-options migrations-dir]}]
