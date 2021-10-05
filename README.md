@@ -9,7 +9,6 @@ Reitit with multiple databases
 
 `clojure -X:uberjar`
 
-
 ## Frontend
 
 installing shadow-cljs
