@@ -1,15 +1,11 @@
 {:source-paths ["src/cljs" "src/cljc"]
- :dependencies [[rum/rum "0.12.8"]]
- :nrepl
- {:port 3333}
- :dev-http
- {8081 "public"}
+ :nrepl        {:port 3333}
+ :dev-http     {8081 "public"}
 
  :builds
  {:app
   {:target     :browser
    :output-dir "public/js"
    :modules    {:main {:init-fn reitit-db-fun.main/init}}
-
-   :release {:compiler-options {:optimizations :advanced}
-             :output-dir       "resources/public/js"}}}}
+   :release    {:compiler-options {:optimizations :advanced}
+                :output-dir       "resources/public/js"}}}}
