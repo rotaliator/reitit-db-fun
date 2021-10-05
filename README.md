@@ -1,9 +1,9 @@
 # reitit-db-fun
 Reitit with multiple databases
 
-## running
+## running server
 
-`clojure -M:server`
+`clojure -M:run`
 
 ## uberjar compilation
 
@@ -22,7 +22,7 @@ installing shadow-cljs
 
 ### watch dev build
 
-`clj -M:cljs watch app`
+`clojure -M:cljs watch app`
 
 if shadow-cljs dependency is set in `deps.edn`
 (and cljs dependencies like rum or reagent)
@@ -31,17 +31,11 @@ or
 
 `shadow-cljs watch app`
 
-
-or
-
-`clojure -M:cljs:watch`
-
-
 if shadow-cljs is installed using npm and cljs dependencies ale set in `shadow-cljs.edn`
 
 ### build frontend for production
 
-`clj -M:cljs release app`
+`clojure -M:cljs release app`
 
 or
 
@@ -49,4 +43,9 @@ or
 
 or
 
-`clojure -M:cljs:build`
+`clojure -T:build:cljs`
+
+
+### build frontend and uberjar
+
+`clojure -T:build all`

@@ -25,9 +25,8 @@
           :extra-deps  {thheller/shadow-cljs {:mvn/version "2.15.10"}
                         rum/rum              {:mvn/version "0.12.8"}}
           :main-opts   ["-m" "shadow.cljs.devtools.cli"]}
-  :watch {:main-opts ["-m" "shadow.cljs.devtools.cli" "watch" "app"]}
-  :build {:main-opts ["-m" "shadow.cljs.devtools.cli" "release" "app"]}
-
+  :build {:deps       {io.github.clojure/tools.build {:git/tag "v0.5.1" :git/sha "21da7d4"}}
+          :ns-default build}
 
   :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
             :exec-fn      hf.depstar/uberjar
@@ -35,7 +34,4 @@
                            :aot        true
                            :main-class reitit-db-fun.main
                            :exclude    ["config.edn"]}}
-  :server  {:main-opts ["-m" "reitit-db-fun.main"]}
-
-  :shell-test {:exec-args {:release :app}
-               :main-opts ["-e" "(use '[clojure.java.shell :only [sh]])(-> \"ls\" sh :out println)"]}}}
+  :run  {:main-opts ["-m" "reitit-db-fun.main"]}}}
