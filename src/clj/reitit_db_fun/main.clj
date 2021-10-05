@@ -119,21 +119,25 @@
   (get-app-handler {:keys-to-wrap keys-to-wrap}))
 
 (defn start-system [system-atom config]
-  (log/info "Starting system")
+  (log/debug "Starting system")
   (let [system @system-atom]
     (when-not system
       (ig/load-namespaces config)
       (reset! system-atom (ig/init config)))))
 
 (defn stop-system [system-atom]
-  (log/info "Stopping system")
+  (log/debug "Stopping system")
   (let [system @system-atom]
     (when system
       (reset! system-atom (ig/halt! system)))))
 
-(defn -main [& args]
-  (start-system main-system config))
 
+(defn -main [& args]
+  (log/debug "Server starting...")
+  (start-system main-system config)
+  (.addShutdownHook
+   (Runtime/getRuntime)
+   (Thread. #(stop-system main-system))))
 
 (defn restart-system []
   (stop-system main-system)
