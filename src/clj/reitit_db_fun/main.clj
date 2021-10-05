@@ -38,24 +38,15 @@
 ;; ==== Config ====
 
 (def config {:app/handler {:keys-to-wrap
-                           {#_#_:node (ig/ref :storage/xtdb)
-                            :model    (ig/ref #_:model/article-datalevin
-                                              :model/article-sql
-                                              #_:model/article-xtdb)}}
+                           {:model (ig/ref :model/article-sql)}}
 
-             #_#_ :model/article-xtdb      {:node (ig/ref :storage/xtdb)}
-             #_#_ :model/article-datalevin {:conn (ig/ref :storage/datalevin)}
-             :model/article-sql       {:datasource (ig/ref :storage/sql)}
+             :model/article-sql {:datasource (ig/ref :storage/sql)}
 
              :adapter/aleph {:port    8080
                              :handler (ig/ref :app/handler)}
 
-             #_#_ :storage/xtdb      {}
-             #_#_ :storage/datalevin {:uri    "datalevin.db"
-                                 :schema {}}
-             :storage/sql       {:conn-options   {:jdbc-url "jdbc:sqlite:database.sqlite"}
-                                 :migrations-dir "migrations"}})
-
+             :storage/sql {:conn-options   {:jdbc-url "jdbc:sqlite:database.sqlite"}
+                           :migrations-dir "migrations"}})
 
 (defn wrap-keys
   [keys-to-wrap]
