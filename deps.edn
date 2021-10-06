@@ -4,6 +4,7 @@
          integrant/integrant       {:mvn/version "0.8.0"}
          aleph/aleph               {:mvn/version "0.4.7-alpha7"}
          metosin/reitit            {:mvn/version "0.5.15"}
+         metosin/malli             {:mvn/version "0.6.2"}
          metosin/muuntaja          {:mvn/version "0.6.8"}
          ring/ring-defaults        {:mvn/version "0.3.3"}
 
@@ -22,8 +23,7 @@
 
  :aliases
  {:cljs {:extra-paths ["src/cljs" "src/cljc"]
-         :extra-deps  {thheller/shadow-cljs {:mvn/version "2.15.10"}
-                       rum/rum              {:mvn/version "0.12.8"}}
+         :extra-deps  {thheller/shadow-cljs {:mvn/version "2.15.10"}}
          :main-opts   ["-m" "shadow.cljs.devtools.cli"]}
 
   :build {:extra-paths ["src/cljs" "src/cljc"]
