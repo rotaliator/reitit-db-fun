@@ -1,27 +1,19 @@
 (ns build
-  (:require [clojure.tools.build.api :as b]))
-
-(def os (if (->> (System/getProperty "os.name")
-                 (re-matches #"(?i)win.*"))
-          :windows
-          :other))
+  (:require [clojure.tools.build.api :as b]
+            [shadow.cljs.devtools.cli]
+            [hf.depstar]))
 
 (defn clean [_]
   (b/delete {:path "public"}))
 
 (defn cljs [_]
-  (let [command ["clojure" "-M:cljs" "release" "app"]
-        command (if (= os :windows)
-                  (into ["powershell.exe"] command)
-                  command)]
-    (b/process {:command-args command})))
+  (shadow.cljs.devtools.cli/-main "release" "app"))
 
 (defn uber [_]
-  (let [command ["clojure" "-X:uberjar"]
-        command (if (= os :windows)
-                  (into ["powershell.exe"] command)
-                  command)]
-    (b/process {:command-args command})))
+  (hf.depstar/uberjar {:jar        "reitit-db-run.jar"
+                       :aot        true
+                       :main-class 'reitit-db-fun.main
+                       :exclude    ["config.edn"]}))
 
 (defn all [_]
   (cljs nil)
