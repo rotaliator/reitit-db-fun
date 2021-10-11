@@ -27,7 +27,7 @@
          :main-opts   ["-m" "shadow.cljs.devtools.cli"]}
 
   :build {:extra-paths ["src/cljs" "src/cljc"]
-          :extra-deps  {io.github.clojure/tools.build   {:git/tag "v0.5.1" :git/sha "21da7d4"}
+          :extra-deps  {io.github.clojure/tools.build   {:git/tag "v0.6.1" :git/sha "515b334"}
                         thheller/shadow-cljs            {:mvn/version "2.15.10"}
                         com.github.seancorfield/depstar {:mvn/version "2.1.303"}
 
