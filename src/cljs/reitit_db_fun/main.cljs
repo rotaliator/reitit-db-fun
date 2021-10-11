@@ -49,10 +49,9 @@
            (input {:type :text-area :value (:body article)})])))
 
 
-(defn save-article [article]
+(defn save-article! [article]
   (swap! app-state update :articles conj article))
 
-(save-article {:body "tresc" :title "tytul"})
 
 ;; dodać lokalny stan z {} i walidować
 (rum/defcs article-form < (rum/local
@@ -76,7 +75,7 @@
          (if (m/validate v/Article {:title title :body body})
            (do
              (swap! local-state assoc :messages {})
-             (save-article {:title title :body body})
+             (save-article! {:title title :body body})
              (prn "call to backend" {:title title :body body}))
            (let [errors (-> v/Article
                             (m/explain {:title title :body body})
