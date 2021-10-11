@@ -201,7 +201,7 @@
       :body
       slurp)
 
-  ;; Basa SQL na Datomy!
+  ;; Baza SQL na Datomy!
 
   (def initial-datoms
     (let [datasource (:storage/sql @main-system)

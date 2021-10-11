@@ -6,7 +6,8 @@
 
  :dependencies [[rum/rum "0.12.8"]
                 [datascript/datascript "1.2.8"]
-                [metosin/malli "0.6.2"]]
+                [metosin/malli "0.6.2"]
+                [cljs-ajax "0.8.4"]]
 
  :builds
  {:app

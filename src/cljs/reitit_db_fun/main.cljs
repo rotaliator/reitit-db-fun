@@ -3,79 +3,91 @@
             [rum.core :as rum]
             [malli.core :as m]
             [malli.error :as me]
+            [ajax.core :refer [GET POST]]
             [reitit-db-fun.validations :as v]))
 
-(defonce app-state (atom {:articles [{:title "x"
-                                      :body "y"
-                                      :author-id "a"}]}))
+(defonce app-state (atom {:articles [{:title     "Tytul artykulu"
+                                      :body      "Ciekawa tresc artykulu"
+                                      :author-id 1}]}))
 
 
-(rum/defc title [text]
+(rum/defc title < rum/static
+  [text]
   [:h1 text])
-
-(rum/defc articles < rum/static
-  [articles]
-  (into [:ul]
-        (for [article articles]
-          [:li (:title article)])))
 
 (rum/defc input < rum/static
   [{:keys [type name label message value on-change]}]
   (let [inputs
         {:text
-         [:div.field
+         [:.field
           [:label.label label]
-          [:div.control
+          [:.control
            [:input.input {:value       value
                           :type        "text"
                           :placeholder label
                           :on-change   on-change}]]
           [:p.help.is-danger message]]
+
          :text-area
-         [:div.field
+         [:.field
           [:label.label label]
-          [:div.control
+          [:.control
            [:textarea.textarea {:name        name
                                 :type        :textarea
                                 :placeholder label
                                 :value       value
                                 :on-change   on-change}]]
-          [:p.help.is-danger message]]
-         }]
+          [:p.help.is-danger message]]}]
     (get inputs type)))
 
+(rum/defc articles < rum/static
+  [articles]
+  (into [:div]
+        (for [article articles]
+          [:<>
+           (input {:type :text :value (:title article)})
+           (input {:type :text-area :value (:body article)})])))
+
+
+(defn save-article [article]
+  (swap! app-state update :articles conj article))
+
+(save-article {:body "tresc" :title "tytul"})
 
 ;; dodać lokalny stan z {} i walidować
 (rum/defcs article-form < (rum/local
-                           {:title "" :title-message ""
-                            :body  "" :body-message  ""}
+                           {:form-data {:title "" :body ""}
+                            :messages  {}}
                            ::article-form)
   [state]
-  (let [local-state            (::article-form state)
-        {:keys [title body
-                title-message
-                body-message]} @local-state]
+  (let [local-state        (::article-form state)
+        {:keys           [form-data messages]} @local-state
+        {:keys [title body]} form-data]
     [:div
      (input {:name      :title :type :text :label "Tytuł" :value title
-             :message title-message
-             :on-change (fn [e] (swap! local-state assoc :title (-> e .-target .-value)))})
+             :message   (get messages :title "")
+             :on-change (fn [e] (swap! local-state assoc-in [:form-data :title] (-> e .-target .-value)))})
      (input {:name      :body :type :text-area :label "Treść" :value body
-             :message body-message
-             :on-change (fn [e] (swap! local-state assoc :body (-> e .-target .-value)))})
-     [:button.button.is-primary {:on-click
-                                 (fn [_]
-                                   (if (m/validate v/Article {:title title :body body})
-                                     (prn "call to backend" {:title title :body body})
-                                     (let [errors (-> v/Article
-                                                      (m/explain {:title title :body body})
-                                                      (me/humanize))]
-                                       (doseq [[k v] errors]
-                                         (let [msg-key (-> k name (#(str % "-message")) keyword)]
-                                           (swap! local-state assoc msg-key v))))))}
+             :message   (get messages :body "")
+             :on-change (fn [e] (swap! local-state assoc-in [:form-data :body] (-> e .-target .-value)))})
+     [:button.button.is-primary
+      {:on-click
+       (fn [_]
+         (if (m/validate v/Article {:title title :body body})
+           (do
+             (swap! local-state assoc :messages {})
+             (save-article {:title title :body body})
+             (prn "call to backend" {:title title :body body}))
+           (let [errors (-> v/Article
+                            (m/explain {:title title :body body})
+                            (me/humanize))]
+             (swap! local-state assoc :messages {})
+             (doseq [[k v] errors]
+               (swap! local-state assoc-in [:messages k] v)))))}
       "Zapisz"]]))
 
 (rum/defc app []
-  [:div.container
+  [:.container
    (title "Artukuły")
    (articles (:articles @app-state))
    (article-form)])
@@ -93,6 +105,6 @@
       (me/humanize {:errors (-> me/default-errors
                                 (assoc ::m/missing-key
                                        {:error/message "Pole wymagane"}))}))
-  (js/alert "asdsd")
+
 
   )
