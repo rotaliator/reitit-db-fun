@@ -16,7 +16,8 @@
   [:h1 text])
 
 (rum/defc input < rum/static
-  [{:keys [type name label message value on-change]}]
+  [{:keys [type name label message value on-change read-only]
+    :or   {read-only false}}]
   (let [inputs
         {:text
          [:.field
@@ -25,7 +26,8 @@
            [:input.input {:value       value
                           :type        "text"
                           :placeholder label
-                          :on-change   on-change}]]
+                          :on-change   on-change
+                          :read-only   read-only}]]
           [:p.help.is-danger message]]
 
          :text-area
@@ -36,7 +38,8 @@
                                 :type        :textarea
                                 :placeholder label
                                 :value       value
-                                :on-change   on-change}]]
+                                :on-change   on-change
+                                :read-only   read-only}]]
           [:p.help.is-danger message]]}]
     (get inputs type)))
 
@@ -45,8 +48,8 @@
   (into [:div]
         (for [article articles]
           [:<>
-           (input {:type :text :value (:title article)})
-           (input {:type :text-area :value (:body article)})])))
+           (input {:type :text :value (:title article) :read-only true})
+           (input {:type :text-area :value (:body article) :read-only true})])))
 
 
 (defn save-article! [article]
@@ -65,10 +68,14 @@
     [:div
      (input {:name      :title :type :text :label "Tytuł" :value title
              :message   (get messages :title "")
-             :on-change (fn [e] (swap! local-state assoc-in [:form-data :title] (-> e .-target .-value)))})
+             :on-change (fn [e]
+                          (swap! local-state assoc-in [:form-data :title]
+                                 (-> e .-target .-value)))})
      (input {:name      :body :type :text-area :label "Treść" :value body
              :message   (get messages :body "")
-             :on-change (fn [e] (swap! local-state assoc-in [:form-data :body] (-> e .-target .-value)))})
+             :on-change (fn [e]
+                          (swap! local-state assoc-in [:form-data :body]
+                                 (-> e .-target .-value)))})
      [:button.button.is-primary
       {:on-click
        (fn [_]
