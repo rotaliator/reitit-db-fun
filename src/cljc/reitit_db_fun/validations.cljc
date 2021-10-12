@@ -3,9 +3,9 @@
             [malli.error :as me]))
 
 (def Article [:map
-              [:title [:string {:min 2}]]
-              [:body [:string {:min 5}]]
-              [:author-id :int]])
+              [:article/title [:string {:min 2}]]
+              [:article/body [:string {:min 5}]]
+              [:article/author-id :int]])
 
 (comment
   (m/validate Article
