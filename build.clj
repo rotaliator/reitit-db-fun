@@ -10,7 +10,7 @@
   (shadow.cljs.devtools.cli/-main "release" "app"))
 
 (defn uber [_]
-  (hf.depstar/uberjar {:jar        "reitit-db-run.jar"
+  (hf.depstar/uberjar {:jar        "reitit-db-fun.jar"
                        :aot        true
                        :main-class 'reitit-db-fun.main
                        :exclude    ["config.edn"]}))
