@@ -6,6 +6,8 @@
             [reitit.ring :as ring]
             [muuntaja.core :as m]
             [reitit.ring.middleware.muuntaja :as muuntaja]
+            [reitit.ring.middleware.parameters]
+
             [reitit.coercion.malli]
             [reitit.coercion :as coercion]
             [clojure.tools.logging :as log]
@@ -33,10 +35,71 @@
 
             ;; Datascript
             [datascript.core :as d]
-            [datascript.db :as db]))
+            [datascript.db :as db]
+
+            ;; core.async
+            [clojure.core.async :as async]
+            ;;Sente
+            [taoensso.sente :as sente]
+            ;; TODO [ring.middleware.anti-forgery :refer [wrap-anti-forgery]] ; <--- Recommended
+            [ring.middleware.keyword-params]
+            [ring.middleware.params]
+            [ring.middleware.session]
+            [taoensso.sente.server-adapters.aleph :refer [get-sch-adapter]]
+            ))
+
+;; Sente stuff
+(defonce sente-state
+  (let [{:keys [ch-recv send-fn connected-uids
+                ajax-post-fn ajax-get-or-ws-handshake-fn]}
+        (sente/make-channel-socket-server! (get-sch-adapter) {:csrf-token-fn nil})]
+    {:ring-ajax-post                ajax-post-fn
+     :ring-ajax-get-or-ws-handshake ajax-get-or-ws-handshake-fn
+     :ch-chsk                       ch-recv ; ChannelSocket's receive channel
+     :chsk-send!                    send-fn ; ChannelSocket's send API fn
+     :connected-uids                connected-uids} ; Watchable, read-only atom
+    ))
+
+(def ring-ajax-post                (:ring-ajax-post sente-state))
+(def ring-ajax-get-or-ws-handshake (:ring-ajax-get-or-ws-handshake sente-state))
+(def ch-chsk                       (:ch-chsk sente-state)) ; ChannelSocket's receive channel
+(def chsk-send!                    (:chsk-send! sente-state)) ; ChannelSocket's send API fn
+(def connected-uids                (:connected-uids sente-state)) ; Watchable, read-only atom
+
+(defmulti event-msg-handler
+  "Multimethod to handle Sente `event-msg`s"
+  :id)
+
+(defmethod event-msg-handler :dafault
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+  (log/info "Unmathed msg handler for event:" event)
+  (when ?reply-fn
+    (?reply-fn {:umatched-event-as-echoed-from-server event})))
+
+(defmethod event-msg-handler :article/save!
+  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+  (log/info "Saving article" event)
+  (when ?reply-fn
+    (?reply-fn {:saving event})))
+
+
+(comment
+  ;;to zwraca stop-fn więc umieścić w komponencie integranta!
+  ;; i na halt-key wywołać (stop-fn)
+  (def sente-router-not-yet-ig
+    (sente/start-server-chsk-router! ch-chsk event-msg-handler))
+
+  ;; żeby zatrzymać handler
+  (sente-router-not-yet-ig)
+
+
+  )
+
+
+
+
 
 ;; ==== Config ====
-
 (def config {:app/handler {:keys-to-wrap
                            {:model (ig/ref :model/article-sql)}}
 
@@ -70,28 +133,38 @@
 (defn get-app-handler [{:keys [keys-to-wrap]}]
   (ring/ring-handler
    (ring/router
-    ["/api"
-     ["/articles"
-      {:get get-articles-handler}]
-     ["/article"
-      {:post update-article-handler}]
-     ["/article/:article-id"
-      {:get get-article-handler}]
-     ["/ping"
-      {:get {:handler (fn [req]
-                        {:status 200
-                         :body   {:message "pong"
-                                  :request (pr-str req)}})}}]
-     ["/status"
-      {:get {:handler (fn [req]
-                        {:status 200
-                         :body   {:message "status"
-                                  :model   (pr-str (:model req))}})}}]]
+    [
+     ["/api"
+      ["/articles"
+       {:get get-articles-handler}]
+      ["/article"
+       {:post update-article-handler}]
+      ["/article/:article-id"
+       {:get get-article-handler}]
+      ["/ping"
+       {:get {:handler (fn [req]
+                         {:status 200
+                          :body   {:message "pong"
+                                   :request (pr-str req)}})}}]
+      ["/status"
+       {:get {:handler (fn [req]
+                         {:status 200
+                          :body   {:message "status"
+                                   :model   (pr-str (:model req))}})}}]]
+     ;; Sente
+     ["/chsk" {:get  {:handler ring-ajax-get-or-ws-handshake}
+               :post {:handler ring-ajax-post}}]]
     ;; router data affecting all routes
     {:data {:muuntaja   m/instance
-            :middleware [muuntaja/format-middleware
+            :middleware [
+                         ring.middleware.session/wrap-session
+                         reitit.ring.middleware.parameters/parameters-middleware
+                         ring.middleware.keyword-params/wrap-keyword-params
+
+                         muuntaja/format-middleware
                          muuntaja/format-response-middleware
-                         (wrap-keys keys-to-wrap)]}})
+                         (wrap-keys keys-to-wrap)
+                         ]}})
    (ring/routes
     (ring/create-resource-handler {:path "/"})
     (ring/create-default-handler))))

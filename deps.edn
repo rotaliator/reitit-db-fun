@@ -20,7 +20,10 @@
          datascript/datascript {:mvn/version "1.2.8"}
 
          ;; for time-ordered UUIDs
-         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.2"}}
+         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.2"}
+
+         ;; Sente
+         com.taoensso/sente {:mvn/version "1.16.2"}}
 
  :aliases
  {:cljs {:extra-paths ["src/cljs" "src/cljc"]

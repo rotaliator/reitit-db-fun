@@ -7,7 +7,8 @@
             [reitit-db-fun.validations :as v]
 
             [reitit-db-fun.db :refer [conn]]
-            [datascript.core :as ds]))
+            [datascript.core :as ds]
+            [reitit-db-fun.client]))
 
 (defn entities-for-attr [db attribute]
   (->> (ds/datoms db :aevt attribute)
