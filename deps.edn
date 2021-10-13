@@ -7,11 +7,11 @@
          metosin/malli             {:mvn/version "0.6.2"}
          metosin/muuntaja          {:mvn/version "0.6.8"}
          ring/ring-defaults        {:mvn/version "0.3.3"}
-         org.clojure/core.async    {:mvn/version "1.3.618"}
+         org.clojure/core.async    {:mvn/version "1.3.622"}
 
          ;; SQL ;)
-         com.github.seancorfield/next.jdbc {:mvn/version "1.2.709"}
-         com.github.seancorfield/honeysql  {:mvn/version "2.0.783"}
+         com.github.seancorfield/next.jdbc {:mvn/version "1.2.731"}
+         com.github.seancorfield/honeysql  {:mvn/version "2.1.818"}
          hikari-cp/hikari-cp               {:mvn/version "2.13.0"}
          org.xerial/sqlite-jdbc            {:mvn/version "3.36.0.3"}
          ragtime/ragtime                   {:mvn/version "0.8.1"}
@@ -20,16 +20,16 @@
          datascript/datascript {:mvn/version "1.2.8"}
 
          ;; for time-ordered UUIDs
-         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.1"}}
+         com.github.f4b6a3/uuid-creator {:mvn/version "4.1.2"}}
 
  :aliases
  {:cljs {:extra-paths ["src/cljs" "src/cljc"]
-         :extra-deps  {thheller/shadow-cljs {:mvn/version "2.15.10"}}
+         :extra-deps  {thheller/shadow-cljs {:mvn/version "2.15.12"}}
          :main-opts   ["-m" "shadow.cljs.devtools.cli"]}
 
   :build {:extra-paths ["src/cljs" "src/cljc"]
-          :extra-deps  {io.github.clojure/tools.build   {:git/tag "v0.6.1" :git/sha "515b334"}
-                        thheller/shadow-cljs            {:mvn/version "2.15.10"}
+          :extra-deps  {io.github.clojure/tools.build   {:git/tag "v0.6.2" :git/sha "226fb52"}
+                        thheller/shadow-cljs            {:mvn/version "2.15.12"}
                         com.github.seancorfield/depstar {:mvn/version "2.1.303"}
 
                         ;; cljs dependencies
