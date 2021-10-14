@@ -8,7 +8,8 @@
 
             [reitit-db-fun.db :refer [conn]]
             [datascript.core :as ds]
-            [reitit-db-fun.client]))
+            [reitit-db-fun.client :as client] ;; słaba nazwa. może sente?
+            ))
 
 (defn entities-for-attr [db attribute]
   (->> (ds/datoms db :aevt attribute)
@@ -81,7 +82,9 @@
   "TODO na razie zapisuje lokalnie w bazie. Docelowo w backendzie."
   [article]
   (println "saving:" article)
-  (ds/transact! conn [(merge article {:db/id -1})]))
+  (ds/transact! conn [(merge article {:db/id -1})
+                      ])
+  (client/chsk-send! [:article/save! article]))
 
 ;; dodać lokalny stan z {} i walidować
 (rum/defcs article-form < (rum/local

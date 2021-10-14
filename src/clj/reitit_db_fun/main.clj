@@ -39,61 +39,12 @@
 
             ;; core.async
             [clojure.core.async :as async]
-            ;;Sente
-            [taoensso.sente :as sente]
-            ;; TODO [ring.middleware.anti-forgery :refer [wrap-anti-forgery]] ; <--- Recommended
+
+            ;; Middleware'y wymagane przez Sente
+            ;; TODO [ring.middleware.anti-forgery :refer [wrap-anti-forgery]] ; <--- for SENTE!
             [ring.middleware.keyword-params]
             [ring.middleware.params]
-            [ring.middleware.session]
-            [taoensso.sente.server-adapters.aleph :refer [get-sch-adapter]]
-            ))
-
-;; Sente stuff
-(defonce sente-state
-  (let [{:keys [ch-recv send-fn connected-uids
-                ajax-post-fn ajax-get-or-ws-handshake-fn]}
-        (sente/make-channel-socket-server! (get-sch-adapter) {:csrf-token-fn nil})]
-    {:ring-ajax-post                ajax-post-fn
-     :ring-ajax-get-or-ws-handshake ajax-get-or-ws-handshake-fn
-     :ch-chsk                       ch-recv ; ChannelSocket's receive channel
-     :chsk-send!                    send-fn ; ChannelSocket's send API fn
-     :connected-uids                connected-uids} ; Watchable, read-only atom
-    ))
-
-(def ring-ajax-post                (:ring-ajax-post sente-state))
-(def ring-ajax-get-or-ws-handshake (:ring-ajax-get-or-ws-handshake sente-state))
-(def ch-chsk                       (:ch-chsk sente-state)) ; ChannelSocket's receive channel
-(def chsk-send!                    (:chsk-send! sente-state)) ; ChannelSocket's send API fn
-(def connected-uids                (:connected-uids sente-state)) ; Watchable, read-only atom
-
-(defmulti event-msg-handler
-  "Multimethod to handle Sente `event-msg`s"
-  :id)
-
-(defmethod event-msg-handler :dafault
-  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
-  (log/info "Unmathed msg handler for event:" event)
-  (when ?reply-fn
-    (?reply-fn {:umatched-event-as-echoed-from-server event})))
-
-(defmethod event-msg-handler :article/save!
-  [{:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
-  (log/info "Saving article" event)
-  (when ?reply-fn
-    (?reply-fn {:saving event})))
-
-
-(comment
-  ;;to zwraca stop-fn więc umieścić w komponencie integranta!
-  ;; i na halt-key wywołać (stop-fn)
-  (def sente-router-not-yet-ig
-    (sente/start-server-chsk-router! ch-chsk event-msg-handler))
-
-  ;; żeby zatrzymać handler
-  (sente-router-not-yet-ig)
-
-
-  )
+            [ring.middleware.session]))
 
 
 
@@ -101,7 +52,12 @@
 
 ;; ==== Config ====
 (def config {:app/handler {:keys-to-wrap
-                           {:model (ig/ref :model/article-sql)}}
+                           {:model (ig/ref :model/article-sql)}
+                           :sente (ig/ref :reitit-db-fun.sente/sente)}
+
+             :reitit-db-fun.sente/sente               {}
+             :reitit-db-fun.msg-handlers/msg-handlers {:sente-state (ig/ref :reitit-db-fun.sente/sente)
+                                                       :model       (ig/ref :model/article-sql)}
 
              :model/article-sql {:datasource (ig/ref :storage/sql)}
 
@@ -130,7 +86,7 @@
   {:body (reitit-db-fun.model/update-article model body-params)})
 
 
-(defn get-app-handler [{:keys [keys-to-wrap]}]
+(defn get-app-handler [{:keys [keys-to-wrap sente]}]
   (ring/ring-handler
    (ring/router
     [
@@ -152,8 +108,8 @@
                           :body   {:message "status"
                                    :model   (pr-str (:model req))}})}}]]
      ;; Sente
-     ["/chsk" {:get  {:handler ring-ajax-get-or-ws-handshake}
-               :post {:handler ring-ajax-post}}]]
+     ["/chsk" {:get  {:handler (:ring-ajax-get-or-ws-handshake sente)}
+               :post {:handler (:ring-ajax-post sente)}}]]
     ;; router data affecting all routes
     {:data {:muuntaja   m/instance
             :middleware [
@@ -177,10 +133,9 @@
 (defmethod ig/halt-key! :adapter/aleph [_ server]
   (.close server))
 
-
-
-(defmethod ig/init-key :app/handler [_ {:keys [keys-to-wrap]}]
-  (get-app-handler {:keys-to-wrap keys-to-wrap}))
+(defmethod ig/init-key :app/handler [_ {:keys [keys-to-wrap sente]}]
+  (get-app-handler {:keys-to-wrap keys-to-wrap
+                    :sente sente}))
 
 (defn start-system [system-atom config]
   (log/debug "Starting system")
