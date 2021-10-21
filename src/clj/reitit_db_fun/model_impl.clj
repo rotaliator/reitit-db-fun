@@ -7,6 +7,14 @@
             [reitit-db-fun.uuid :as uuid]))
 
 ;; SQL
+(def article-query (sql/format {:select [:article/* :address/* :user/*]
+                                :from   [:article :address :user]
+                                :where  [:and
+                                         [:= :article/id ]
+                                         [:= :article/author :user/id]
+                                         [:= :user/address :address/id]]}))
+
+
 
 (defrecord ArticleSQL [datasource]
   reitit-db-fun.model/IArticle
@@ -24,7 +32,10 @@
       (if id
         (jdbc-sql/query datasource ["select * from article where id = ?" id])
         (jdbc-sql/query datasource ["select * from article where rowid = ?"
-                                    (get result (keyword "last_insert_rowid()"))]))))
+                                    (get result (keyword "last_insert_rowid()"))]))
+      ;; na koniec pobieram resultset i przerabiam na datomy
+
+      ))
   (get-articles [_]
     (jdbc/execute! datasource ["select * from article;"]))
   (get-article [_ article-id]

@@ -12,3 +12,12 @@
 (defonce conn (let [conn (ds/create-conn schema)]
                 (ds/transact! conn initial-data)
                 conn))
+
+(defn save-datoms! [datoms]
+  (ds/transact! conn datoms))
+
+(comment
+
+  (ds/datoms @conn :eavt)
+
+  )

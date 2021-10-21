@@ -44,7 +44,9 @@
             ;; TODO [ring.middleware.anti-forgery :refer [wrap-anti-forgery]] ; <--- for SENTE!
             [ring.middleware.keyword-params]
             [ring.middleware.params]
-            [ring.middleware.session]))
+            [ring.middleware.session]
+
+            [reitit-db-fun.sente-functions :as sente-fn]))
 
 
 
@@ -52,12 +54,19 @@
 
 ;; ==== Config ====
 (def config {:app/handler {:keys-to-wrap
-                           {:model (ig/ref :model/article-sql)}
+                           {:model           (ig/ref :model/article-sql)
+                            :sente-functions (ig/ref :reitit-db-fun.sente-functions/sente-functions)}
                            :sente (ig/ref :reitit-db-fun.sente/sente)}
 
-             :reitit-db-fun.sente/sente               {}
-             :reitit-db-fun.msg-handlers/msg-handlers {:sente-state (ig/ref :reitit-db-fun.sente/sente)
-                                                       :model       (ig/ref :model/article-sql)}
+             :reitit-db-fun.sente/sente {}
+
+             :reitit-db-fun.msg-handlers/msg-handlers
+             {:sente-state     (ig/ref :reitit-db-fun.sente/sente)
+              :sente-functions (ig/ref :reitit-db-fun.sente-functions/sente-functions)
+              :model           (ig/ref :model/article-sql)}
+
+             :reitit-db-fun.sente-functions/sente-functions {:sente-state (ig/ref :reitit-db-fun.sente/sente)
+                                                             :model       (ig/ref :model/article-sql)}
 
              :model/article-sql {:datasource (ig/ref :storage/sql)}
 
@@ -85,8 +94,7 @@
 (defn update-article-handler [{:keys [model body-params]}]
   {:body (reitit-db-fun.model/update-article model body-params)})
 
-
-(defn get-app-handler [{:keys [keys-to-wrap sente]}]
+(defn get-app-handler [{:keys [keys-to-wrap sente sente-functions]}]
   (ring/ring-handler
    (ring/router
     [
@@ -127,25 +135,28 @@
 
 (defonce main-system (atom nil))
 
-(defmethod ig/init-key :adapter/aleph [_ {:keys [handler port]}]
+(defmethod ig/init-key :adapter/aleph [key {:keys [handler port]}]
+  (log/info "Starting" key)
   (http/start-server handler {:port port}))
 
-(defmethod ig/halt-key! :adapter/aleph [_ server]
+(defmethod ig/halt-key! :adapter/aleph [key server]
+  (log/info "Stopping" key)
   (.close server))
 
-(defmethod ig/init-key :app/handler [_ {:keys [keys-to-wrap sente]}]
+(defmethod ig/init-key :app/handler [key {:keys [keys-to-wrap sente]}]
+  (log/info "Starting" key)
   (get-app-handler {:keys-to-wrap keys-to-wrap
                     :sente sente}))
 
 (defn start-system [system-atom config]
-  (log/debug "Starting system")
+  (log/info "Starting system")
   (let [system @system-atom]
     (when-not system
       (ig/load-namespaces config)
       (reset! system-atom (ig/init config)))))
 
 (defn stop-system [system-atom]
-  (log/debug "Stopping system")
+  (log/info "Stopping system")
   (let [system @system-atom]
     (when system
       (reset! system-atom (ig/halt! system)))))

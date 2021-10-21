@@ -82,8 +82,10 @@
   "TODO na razie zapisuje lokalnie w bazie. Docelowo w backendzie."
   [article]
   (println "saving:" article)
-  (ds/transact! conn [(merge article {:db/id -1})
-                      ])
+  ;; to powinno przyjść z backendu VVV
+  #_(ds/transact! conn [(merge article {:db/id -1})])
+
+  ;; zapis w backendzie!
   (client/chsk-send! [:article/save! article]))
 
 ;; dodać lokalny stan z {} i walidować
