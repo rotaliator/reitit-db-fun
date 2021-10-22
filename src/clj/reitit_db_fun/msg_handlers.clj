@@ -24,8 +24,8 @@
   (let [article (second event)]
     (if (m/validate v/Article article)
       (do (log/info "Saving to DB!")
-          (model/update-article model article)
-          (sente-fn/send-datoms-to-all-clients sente-functions [[:db/add 3 :author/name "Backender" 536870913]]))
+          (let [datoms (model/update-article model article)]
+            (sente-fn/send-datoms-to-all-clients sente-functions datoms)))
       (log/error "Error validating:" article
                  (-> v/Article
                      (m/explain article)

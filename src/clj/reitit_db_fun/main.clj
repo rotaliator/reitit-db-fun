@@ -91,8 +91,10 @@
 (defn get-articles-handler [{:keys [model]}]
   {:body (reitit-db-fun.model/get-articles model)})
 
-(defn update-article-handler [{:keys [model body-params]}]
-  {:body (reitit-db-fun.model/update-article model body-params)})
+(defn update-article-handler [{:keys [model body-params sente-functions]}]
+  (let [datoms (reitit-db-fun.model/update-article model body-params)]
+    (sente-fn/send-datoms-to-all-clients sente-functions datoms)
+    {:body "Updated"}))
 
 (defn get-app-handler [{:keys [keys-to-wrap sente sente-functions]}]
   (ring/ring-handler
@@ -211,12 +213,13 @@
                         (jdbc/execute! datasource)
                         (mapv :user/id))
         app        (:app/handler @main-system)]
-    (doseq [idx (range 100)]
+    (doseq [idx (range 2)]
       (app {:request-method :post
             :uri            "/api/article"
             :body-params    {:article/title  (str "Test-" (inc idx))
                              :article/body   (str "Treść artykułu " (inc idx))
                              :article/author (rand-nth authors)}})))
+
   ;; sprawdzam pojedynczy artykuł
   (-> ((:app/handler @main-system)
        {:request-method :get
@@ -227,17 +230,18 @@
   (-> ((:app/handler @main-system)
        {:request-method :post
         :uri            "/api/article"
-        :body-params    {:article/id     "3000001"
-                         :article/title  "Title zmieniony ponownie"
+        :body-params    {:article/id     "3000002"
+                         :article/title  "Title zmieniony 2"
                          :article/body   "Treść po zmiania"
+                         :article/address "2000001"
                          :article/author "pkoza"}})
       (update :body slurp))
 
   ;; wszystkie arty
   (-> ((:app/handler @main-system)
        {:request-method :get
-        :uri            "/api/articles"})
-      :body
+        :uri            "/api/articles"}
+       :body)
       slurp)
 
   ;; Baza SQL na Datomy!
@@ -248,22 +252,33 @@
                                   :from   [:article :address :user]
                                   :where  [:and
                                            [:= :article/author :user/id]
-                                           [:= :user/address :address/id]]
+                                           [:= :user/address :address/id]
+                                           ]
                                   :limit  20})]
       (->> (jdbc/execute! datasource query)
            datom/resultset-into-datoms)))
+
+  (let [datasource (:storage/sql @main-system)
+        query      (sql/format {:select [:article/*]
+                                :from   [:article]
+                                :where  [:= :article/id 3000015]
+                                :limit  20})]
+    (->> (jdbc/execute! datasource query)
+         datom/resultset-into-datoms))
+
+
+
   ;; Datascript test db
   (def test-db (db/init-db (mapv #(apply d/datom %) initial-datoms)))
 
   (d/q '[:find (pull ?e [* {:article/author [:user/name {:user/address [*]}]}])
          :where [?e :article/id _]]
        test-db)
-
+  ;; test pojedynczego arta
 
   (do
     (stop-system main-system)
     (start-system main-system config))
 
   (-main)
-
   )

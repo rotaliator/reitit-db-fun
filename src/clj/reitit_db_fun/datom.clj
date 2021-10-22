@@ -67,4 +67,17 @@
 (defn resultset-into-datoms
   "Konwertuje wynik działania selecta na datomy"
   [resultset]
-  (into [] #_(sorted-set) (mapcat entity->datoms) resultset))
+  (into [] #_(sorted-set) (comp
+                           (mapcat entity->datoms)
+                           (filter last)) resultset))
+
+
+(comment
+
+  (-> [{:address/id 2000001, :article/title "Test-2"
+        :article/body "Treść artykułu 2" :user/name "Ewa"
+        :user/id 1000003, :article/author 1000003
+        :user/address 2000001, :address/street "Wróbla"
+        :article/id 3000009, :address/city "Puławy"}]
+      resultset-into-datoms)
+  )

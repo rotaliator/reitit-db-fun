@@ -4,17 +4,22 @@
             [reitit-db-fun.model]
             [next.jdbc :as jdbc]
             [next.jdbc.sql :as jdbc-sql]
-            [reitit-db-fun.uuid :as uuid]))
+            [reitit-db-fun.uuid :as uuid]
+            [honey.sql :as sql]
+            [honey.sql.helpers :refer [select where from left-join]]
+            [reitit-db-fun.datom :as datom]))
 
 ;; SQL
-(def article-query (sql/format {:select [:article/* :address/* :user/*]
-                                :from   [:article :address :user]
-                                :where  [:and
-                                         [:= :article/id ]
-                                         [:= :article/author :user/id]
-                                         [:= :user/address :address/id]]}))
 
+(def article-query-full (-> (select :article/* :address/* :user/*)
+                            (from   :article)
+                            (left-join :user [:= :article/author :user/id])
+                            (left-join :address [:= :user/address :address/id])))
 
+(def article-query (-> (select :article/*)
+                       (from   :article)))
+
+(comment (sql/format article-query))
 
 (defrecord ArticleSQL [datasource]
   reitit-db-fun.model/IArticle
@@ -28,14 +33,22 @@
                    (jdbc-sql/insert! datasource :article
                                      {:title  title
                                       :author author
-                                      :body   body}))]
-      (if id
-        (jdbc-sql/query datasource ["select * from article where id = ?" id])
-        (jdbc-sql/query datasource ["select * from article where rowid = ?"
-                                    (get result (keyword "last_insert_rowid()"))]))
-      ;; na koniec pobieram resultset i przerabiam na datomy
+                                      :body   body}))
+          id     (or id (get result (keyword "last_insert_rowid()")))
+          _      (println "id:" id)
+          #_     (if id
+                   (jdbc-sql/query datasource ["select * from article where id = ?" id])
+                   (jdbc-sql/query datasource ["select * from article where rowid = ?"
+                                               (get result (keyword "last_insert_rowid()"))]))
 
-      ))
+          ;; na koniec pobieram resultset i przerabiam na datomy
+          query     (-> article-query (where [:= :article/id id]))
+          query-str (sql/format query)
+          _         (println query-str)
+          resultset (jdbc/execute! datasource query-str)
+          _         (println resultset)]
+      (datom/resultset-into-datoms resultset)))
+
   (get-articles [_]
     (jdbc/execute! datasource ["select * from article;"]))
   (get-article [_ article-id]

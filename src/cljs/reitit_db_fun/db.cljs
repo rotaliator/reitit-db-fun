@@ -13,8 +13,13 @@
                 (ds/transact! conn initial-data)
                 conn))
 
+(defn- add-db-add
+  "dodaje :db/add do datomów.... TODO TOFIX"
+  [datoms]
+  (into [] (map (partial concat [:db/add])) datoms))
+
 (defn save-datoms! [datoms]
-  (ds/transact! conn datoms))
+  (ds/transact! conn (add-db-add datoms)))
 
 (comment
 
