@@ -4,4 +4,5 @@
 (defprotocol IArticle
   (update-article [_ article])
   (get-articles [_])
-  (get-article [_ article-id]))
+  (get-article [_ article-id])
+  (get-articles-datoms [_]))

@@ -3,7 +3,8 @@
             [clojure.tools.logging :as log]))
 
 (defprotocol IToClient
-  (send-datoms-to-all-clients [_ datoms]))
+  (send-datoms-to-all-clients [_ datoms])
+  (send-datoms-to-client [_ client datoms]))
 
 (defrecord ToClient [sente-state]
   IToClient
@@ -11,8 +12,13 @@
     (let [chsk-send! (:chsk-send! sente-state)
           clients    (:any @(:connected-uids sente-state))]
       (doseq [client clients]
-        (log/info :sending-datoms-to client)
-        (chsk-send! client [:datoms/save! datoms])))))
+        (log/info :sending-datoms-to client datoms)
+        (chsk-send! client [:datoms/save! datoms]))))
+
+  (send-datoms-to-client [_ client datoms]
+    (let [chsk-send! (:chsk-send! sente-state)]
+      (log/info :sending-datoms-to client datoms)
+      (chsk-send! client [:datoms/save! datoms]))))
 
 (defmethod ig/init-key ::sente-functions [key {:keys [sente-state model] :as config}]
   (log/info "Starting" key)

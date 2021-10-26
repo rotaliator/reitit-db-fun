@@ -33,9 +33,17 @@
     (when ?reply-fn
       (?reply-fn {:saving article}))))
 
+(defmethod event-msg-handler :chsk/uidport-open
+  [model sente-functions {:as ev-msg :keys [event id ?data ring-req ?reply-fn
+                                            send-fn uid client-id]}]
+  (log/info "New connection:" uid client-id)
+  (let [datoms (reitit-db-fun.model/get-articles-datoms model)]
+    (future ((do
+               (Thread/sleep 1000)
+               (sente-fn/send-datoms-to-client sente-functions uid datoms))))))
 
 (defmethod event-msg-handler :default
-  [model sente-functions {:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn]}]
+  [model sente-functions {:as ev-msg :keys [event id ?data ring-req ?reply-fn send-fn uid]}]
   (log/info "Unmathed msg handler for event:" event)
   (when ?reply-fn
     (?reply-fn {:unmatched-event-as-echoed-from-server event})))

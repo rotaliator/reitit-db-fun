@@ -11,10 +11,10 @@
 
 ;; SQL
 
-(def article-query-full (-> (select :article/* :address/* :user/*)
+(def article-query-full (-> (select :article/* #_:address/* :user/name :user/id)
                             (from   :article)
                             (left-join :user [:= :article/author :user/id])
-                            (left-join :address [:= :user/address :address/id])))
+                            #_(left-join :address [:= :user/address :address/id])))
 
 (def article-query (-> (select :article/*)
                        (from   :article)))
@@ -53,7 +53,11 @@
     (jdbc/execute! datasource ["select * from article;"]))
   (get-article [_ article-id]
     (jdbc/execute!  datasource ["select * from article where id = ?;"
-                                article-id])))
+                                article-id]))
+  (get-articles-datoms [_]
+    (let [query     (sql/format article-query)
+          resultset (jdbc/execute! datasource query)]
+      (datom/resultset-into-datoms resultset))))
 
 (defmethod ig/init-key :model/article-sql [_ {:keys [datasource]}]
   (->ArticleSQL datasource))

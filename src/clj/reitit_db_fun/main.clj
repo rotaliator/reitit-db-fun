@@ -230,11 +230,11 @@
   (-> ((:app/handler @main-system)
        {:request-method :post
         :uri            "/api/article"
-        :body-params    {:article/id     "3000002"
-                         :article/title  "Title zmieniony 2"
-                         :article/body   "Treść po zmiania"
+        :body-params    {:article/id      "3000002"
+                         :article/title   "Title zmieniony 2"
+                         :article/body    "Treść po zmiania"
                          :article/address "2000001"
-                         :article/author "pkoza"}})
+                         :article/author  "pkoza"}})
       (update :body slurp))
 
   ;; wszystkie arty
@@ -275,6 +275,19 @@
          :where [?e :article/id _]]
        test-db)
   ;; test pojedynczego arta
+
+  (let [model       (:model/article-sql @main-system)
+        datoms      (reitit-db-fun.model/get-articles-datoms model)
+        sente-state (:reitit-db-fun.sente/sente @main-system)
+        chsk-send!  (:chsk-send! sente-state)
+        client      (-> sente-state :connected-uids deref :any first)]
+    (log/info :sending-datoms-to client)
+    (chsk-send! client [:datoms/save! datoms]))
+
+  (let [sente-state (:reitit-db-fun.sente/sente @main-system)
+        clients      (-> sente-state :connected-uids)]
+    @clients)
+
 
   (do
     (stop-system main-system)
